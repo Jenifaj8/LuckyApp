@@ -10,29 +10,42 @@ namespace LuckyApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult Index(string numbers)
+        public IActionResult Index(string pick4Number, string drawType)
         {
-            var inputNumbers = numbers.Split(',')
-                .Select(n => int.Parse(n.Trim()))
-                .ToList();
-
-            List<int> result = new List<int>();
-
-            for (int i = 0; i < inputNumbers.Count; i++)
+            if (string.IsNullOrWhiteSpace(drawType))
             {
-                int newNumber;
-
-                if (i % 2 == 0)
-                    newNumber = inputNumbers[i] + 1;
-                else
-                    newNumber = inputNumbers[i] - 1;
-
-                if (newNumber < 0) newNumber = 0;
-                if (newNumber > 9) newNumber = 9;
-
-                result.Add(newNumber);
+                ViewBag.Error = "Please select Midday or Evening.";
+                return View();
             }
 
+            if (string.IsNullOrWhiteSpace(pick4Number))
+            {
+                ViewBag.Error = "Please enter exactly 4 digits.";
+                return View();
+            }
+
+            pick4Number = pick4Number.Trim();
+
+            if (pick4Number.Length != 4 || !pick4Number.All(char.IsDigit))
+            {
+                ViewBag.Error = "Pick 4 requires exactly 4 digits.";
+                return View();
+            }
+
+            var digits = pick4Number.Select(c => int.Parse(c.ToString())).ToList();
+            List<int> result = new();
+
+            for (int i = 0; i < digits.Count; i++)
+            {
+                int newDigit = (i % 2 == 0) ? digits[i] + 1 : digits[i] - 1;
+
+                if (newDigit < 0) newDigit = 0;
+                if (newDigit > 9) newDigit = 9;
+
+                result.Add(newDigit);
+            }
+
+            ViewBag.SelectedDrawType = drawType;
             ViewBag.Result = string.Join("", result);
 
             return View();

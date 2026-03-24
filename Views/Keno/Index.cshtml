@@ -5,29 +5,81 @@
 <div class="py-5" style="background-color: #f4efff; min-height: 100vh;">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
+            <div class="col-lg-9">
                 <div class="card shadow-sm border-0 rounded-4">
                     <div class="card-body p-5">
                         <h1 class="mb-3">Keno</h1>
                         <p class="text-muted mb-4">
-                            Enter numbers and generate a new pattern-based combination.
+                            Choose the draw type, select your pick count, and enter your numbers.
                         </p>
 
                         <form method="post">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Enter numbers (comma separated)</label>
-                                <input type="text" name="numbers" class="form-control form-control-lg rounded-3"
-                                       placeholder="e.g. 2,8,14,21,33,40,55,67" />
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Draw Type</label>
+                                <select name="drawType" class="form-select form-select-lg rounded-3">
+                                    <option value="">Select draw</option>
+                                    <option value="Midday" selected="@(ViewBag.SelectedDrawType == "Midday")">Midday</option>
+                                    <option value="Evening" selected="@(ViewBag.SelectedDrawType == "Evening")">Evening</option>
+                                </select>
                             </div>
 
-                            <button type="submit" class="btn btn-primary rounded-3 px-4">Generate</button>
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Pick Count</label>
+                                <select name="pickCount" class="form-select form-select-lg rounded-3">
+                                    @for (int i = 2; i <= 10; i++)
+                                    {
+                                        if (ViewBag.SelectedPickCount != null && ViewBag.SelectedPickCount == i)
+                                        {
+                                            <option value="@i" selected>@i</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@i">@i</option>
+                                        }
+                                    }
+                                </select>
+                                <div class="form-text">Choose how many numbers you want to enter.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Numbers</label>
+                                <input type="text"
+                                       name="numbers"
+                                       class="form-control form-control-lg rounded-3"
+                                       placeholder="e.g. 2,8,14,21,33" />
+                                <div class="form-text">Enter comma-separated numbers between 1 and 70.</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success btn-sm rounded-3 px-4">Generate</button>
                         </form>
+
+                        @if (ViewBag.Error != null)
+                        {
+                            <div class="alert alert-danger mt-4 rounded-3">
+                                @ViewBag.Error
+                            </div>
+                        }
 
                         @if (ViewBag.Result != null)
                         {
-                            <div class="alert alert-light border mt-4 rounded-3">
-                                <h4 class="mb-2">Generated Numbers</h4>
-                                <p class="mb-0 fs-5 fw-semibold">@ViewBag.Result</p>
+                            var resultNumbers = ViewBag.Result.ToString().Split(',');
+
+                            <div class="mt-5">
+                                <h3 class="mb-2">Generated Result</h3>
+                                <p class="text-muted mb-3">
+                                    Draw Type: <strong>@ViewBag.SelectedDrawType</strong> |
+                                    Pick Count: <strong>@ViewBag.SelectedPickCount</strong>
+                                </p>
+
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var number in resultNumbers)
+                                    {
+                                        <div class="rounded-circle bg-light border d-flex justify-content-center align-items-center fw-bold"
+                                             style="width: 60px; height: 60px; font-size: 1.1rem;">
+                                            @number.Trim()
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         }
                     </div>
