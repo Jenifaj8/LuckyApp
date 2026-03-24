@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Pick 4";
+}
+
+<div class="py-5" style="background-color: #fff1f6; min-height: 100vh;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body p-5">
+                        <h1 class="mb-3">Pick 4</h1>
+                        <p class="text-muted mb-4">
+                            Enter 4 digits and generate a new pattern-based result.
+                        </p>
+
+                        <form method="post">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Enter 4 digits (comma separated)</label>
+                                <input type="text" name="numbers" class="form-control form-control-lg rounded-3"
+                                       placeholder="e.g. 1,5,7,9" />
+                            </div>
+
+                            <button type="submit" class="btn btn-primary rounded-3 px-4">Generate</button>
+                        </form>
+
+                        @if (ViewBag.Result != null)
+                        {
+                            <div class="alert alert-light border mt-4 rounded-3">
+                                <h4 class="mb-2">Generated Number</h4>
+                                <p class="mb-0 fs-5 fw-semibold">@ViewBag.Result</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

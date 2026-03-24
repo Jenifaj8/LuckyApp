@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Lotto 6/49";
+}
+
+<div class="py-5" style="background-color: #eef6ff; min-height: 100vh;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-body p-5">
+                        <h1 class="mb-3">Lotto 6/49</h1>
+                        <p class="text-muted mb-4">
+                            Enter 6 numbers and generate a new pattern-based combination.
+                        </p>
+
+                        <form method="post">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Enter 6 numbers (comma separated)</label>
+                                <input type="text" name="numbers" class="form-control form-control-lg rounded-3"
+                                       placeholder="e.g. 5,12,18,23,34,45" />
+                            </div>
+
+                            <button type="submit" class="btn btn-primary rounded-3 px-4">Generate</button>
+                        </form>
+
+                        @if (ViewBag.Result != null)
+                        {
+                            <div class="alert alert-light border mt-4 rounded-3">
+                                <h4 class="mb-2">Generated Numbers</h4>
+                                <p class="mb-0 fs-5 fw-semibold">@ViewBag.Result</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

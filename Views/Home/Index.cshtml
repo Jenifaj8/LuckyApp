@@ -1,0 +1,80 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-3 fw-bold">Lucky App</h1>
+        <p class="lead text-muted">
+            Explore number patterns, test strategies, and generate combinations for different games.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 game-card">
+                <div class="card-body p-4 d-flex flex-column">
+                    <h3 class="card-title mb-3">Lotto 6/49</h3>
+                    <p class="card-text text-muted flex-grow-1">
+                        Explore number patterns and generate combinations based on 6/49 draws.
+                    </p>
+                    <a asp-controller="Lotto649" asp-action="Index" class="btn btn-primary rounded-3 w-100">Open Game</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 game-card">
+                <div class="card-body p-4 d-flex flex-column">
+                    <h3 class="card-title mb-3">Lotto Max</h3>
+                    <p class="card-text text-muted flex-grow-1">
+                        View and generate number patterns for Lotto Max style draws.
+                    </p>
+                    <a asp-controller="LottoMax" asp-action="Index" class="btn btn-primary rounded-3 w-100">Open Game</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100 game-card">
+                <div class="card-body p-4 d-flex flex-column">
+                    <h3 class="card-title mb-3">Daily Grand</h3>
+                    <p class="card-text text-muted flex-grow-1">
+                        Test strategies and patterns using Daily Grand style numbers.
+                    </p>
+                    <a asp-controller="DailyGrand" asp-action="Index" class="btn btn-primary rounded-3 w-100">Open Game</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 game-card">
+                <div class="card-body p-4 d-flex flex-column">
+                    <h3 class="card-title mb-3">Pick 4</h3>
+                    <p class="card-text text-muted flex-grow-1">
+                        Try pattern ideas for 4-digit Pick 4 style number generation.
+                    </p>
+                    <a asp-controller="Pick4" asp-action="Index" class="btn btn-primary rounded-3 w-100">Open Game</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 game-card">
+                <div class="card-body p-4 d-flex flex-column">
+                    <h3 class="card-title mb-3">Keno</h3>
+                    <p class="card-text text-muted flex-grow-1">
+                        Experiment with number sequences and pattern analysis for Keno.
+                    </p>
+                    <a asp-controller="Keno" asp-action="Index" class="btn btn-primary rounded-3 w-100">Open Game</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .game-card {
+        min-height: 250px;
+    }
+</style>
