@@ -1,39 +1,85 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using LuckyApp.Models;
+using LuckyApp.Services;
 
 namespace LuckyApp.Controllers
 {
     public class Pick4Controller : Controller
     {
-        public IActionResult Index()
+        private readonly OlgPick4Service _olgPick4Service;
+
+        public Pick4Controller(OlgPick4Service olgPick4Service)
         {
-            return View();
+            _olgPick4Service = olgPick4Service;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var model = await BuildInitialModelAsync();
+            return View(model);
         }
 
         [HttpPost]
-        public IActionResult Index(string pick4Number, string drawType)
+        public async Task<IActionResult> Index(string inputNumber)
         {
-            if (string.IsNullOrWhiteSpace(drawType))
+            var model = await BuildInitialModelAsync();
+
+            if (string.IsNullOrWhiteSpace(inputNumber))
             {
-                ViewBag.Error = "Please select Midday or Evening.";
-                return View();
+                model.ErrorMessage = "Please enter a 4-digit number.";
+                return View(model);
             }
 
-            if (string.IsNullOrWhiteSpace(pick4Number))
+            inputNumber = inputNumber.Trim();
+
+            if (inputNumber.Length != 4 || !inputNumber.All(char.IsDigit))
             {
-                ViewBag.Error = "Please enter exactly 4 digits.";
-                return View();
+                model.ErrorMessage = "Pick 4 requires exactly 4 digits.";
+                return View(model);
             }
 
-            pick4Number = pick4Number.Trim();
+            model.InputNumber = inputNumber;
+            model.GeneratedNumber = GenerateNextNumber(inputNumber);
 
-            if (pick4Number.Length != 4 || !pick4Number.All(char.IsDigit))
+            var gridResult = BuildFlipGrid(inputNumber);
+            model.FlipGrid = gridResult.Grid;
+            model.RowTotals = gridResult.RowTotals;
+
+            return View(model);
+        }
+
+        private async Task<Pick4ViewModel> BuildInitialModelAsync()
+        {
+            var latest = await _olgPick4Service.GetLatestPick4ResultAsync();
+
+            string latestDrawType = latest?.DrawType ?? "Midday";
+            string latestDrawNumber = latest?.Number ?? "4566";
+            string latestDrawDate = latest?.DrawDate ?? "Latest draw unavailable";
+
+            string nextDrawType = latestDrawType.Equals("Midday", StringComparison.OrdinalIgnoreCase)
+                ? "Evening"
+                : "Midday";
+
+            var gridResult = BuildFlipGrid(latestDrawNumber);
+
+            return new Pick4ViewModel
             {
-                ViewBag.Error = "Pick 4 requires exactly 4 digits.";
-                return View();
-            }
+                LatestDrawDate = latestDrawDate,
+                LatestDrawType = latestDrawType,
+                LatestDrawNumber = latestDrawNumber,
+                NextDrawType = nextDrawType,
+                InputNumber = latestDrawNumber,
+                GeneratedNumber = GenerateNextNumber(latestDrawNumber),
+                FlipGrid = gridResult.Grid,
+                RowTotals = gridResult.RowTotals
+            };
+        }
 
-            var digits = pick4Number.Select(c => int.Parse(c.ToString())).ToList();
-            List<int> result = new();
+        private string GenerateNextNumber(string inputNumber)
+        {
+            var digits = inputNumber.Select(c => int.Parse(c.ToString())).ToList();
+            List<int> generatedDigits = new();
 
             for (int i = 0; i < digits.Count; i++)
             {
@@ -42,13 +88,67 @@ namespace LuckyApp.Controllers
                 if (newDigit < 0) newDigit = 0;
                 if (newDigit > 9) newDigit = 9;
 
-                result.Add(newDigit);
+                generatedDigits.Add(newDigit);
             }
 
-            ViewBag.SelectedDrawType = drawType;
-            ViewBag.Result = string.Join("", result);
+            return string.Join("", generatedDigits);
+        }
 
-            return View();
+        private (int[,] Grid, List<int> RowTotals) BuildFlipGrid(string inputNumber)
+        {
+            int[,] grid = new int[4, 4];
+
+            // place input digits on the main diagonal
+            for (int i = 0; i < 4; i++)
+            {
+                grid[i, i] = int.Parse(inputNumber[i].ToString());
+            }
+
+            int lastDigit = int.Parse(inputNumber[3].ToString());
+            int nextDigit = (lastDigit + 1) % 10;
+
+            // fill empty squares in order
+            var fillOrder = new List<(int row, int col)>
+            {
+                (2, 3),
+                (1, 3),
+                (0, 3),
+
+                (0, 2),
+                (0, 1),
+
+                (1, 0),
+                (2, 0),
+                (3, 0),
+
+                (3, 1),
+                (3, 2),
+
+                (2, 1),
+                (1, 2)
+            };
+
+            foreach (var cell in fillOrder)
+            {
+                grid[cell.row, cell.col] = nextDigit;
+                nextDigit = (nextDigit + 1) % 10;
+            }
+
+            List<int> rowTotals = new();
+
+            for (int row = 0; row < 4; row++)
+            {
+                int a = grid[row, 0];
+                int b = grid[row, 1];
+                int c = grid[row, 2];
+
+                int firstPair = (a * 10) + b;
+                int secondPair = (b * 10) + c;
+
+                rowTotals.Add(firstPair + secondPair);
+            }
+
+            return (grid, rowTotals);
         }
     }
 }
