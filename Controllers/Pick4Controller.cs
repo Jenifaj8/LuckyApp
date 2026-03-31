@@ -42,9 +42,9 @@ namespace LuckyApp.Controllers
             model.InputNumber = inputNumber;
             model.GeneratedNumber = GenerateNextNumber(inputNumber);
 
-            var gridResult = BuildFlipGrid(inputNumber);
-            model.FlipGrid = gridResult.Grid;
-            model.RowTotals = gridResult.RowTotals;
+            var (grid, totals) = BuildFlipGrid(inputNumber);
+            model.FlipGrid = grid;
+            model.RowTotals = totals;
 
             return View(model);
         }
@@ -61,7 +61,7 @@ namespace LuckyApp.Controllers
                 ? "Evening"
                 : "Midday";
 
-            var gridResult = BuildFlipGrid(latestDrawNumber);
+            var (grid, totals) = BuildFlipGrid(latestDrawNumber);
 
             return new Pick4ViewModel
             {
@@ -71,8 +71,8 @@ namespace LuckyApp.Controllers
                 NextDrawType = nextDrawType,
                 InputNumber = latestDrawNumber,
                 GeneratedNumber = GenerateNextNumber(latestDrawNumber),
-                FlipGrid = gridResult.Grid,
-                RowTotals = gridResult.RowTotals
+                FlipGrid = grid,
+                RowTotals = totals
             };
         }
 
@@ -94,11 +94,11 @@ namespace LuckyApp.Controllers
             return string.Join("", generatedDigits);
         }
 
-        private (int[,] Grid, List<int> RowTotals) BuildFlipGrid(string inputNumber)
+        private (int[,] grid, List<int> totals) BuildFlipGrid(string inputNumber)
         {
             int[,] grid = new int[4, 4];
 
-            // place input digits on the main diagonal
+            // put input digits on diagonal
             for (int i = 0; i < 4; i++)
             {
                 grid[i, i] = int.Parse(inputNumber[i].ToString());
@@ -107,34 +107,23 @@ namespace LuckyApp.Controllers
             int lastDigit = int.Parse(inputNumber[3].ToString());
             int nextDigit = (lastDigit + 1) % 10;
 
-            // fill empty squares in order
+            // fill remaining cells in a fixed order
             var fillOrder = new List<(int row, int col)>
             {
-                (2, 3),
-                (1, 3),
-                (0, 3),
-
-                (0, 2),
-                (0, 1),
-
-                (1, 0),
-                (2, 0),
-                (3, 0),
-
-                (3, 1),
-                (3, 2),
-
-                (2, 1),
-                (1, 2)
+                (2,3), (1,3), (0,3),
+                (0,2), (0,1),
+                (1,0), (2,0), (3,0),
+                (3,1), (3,2),
+                (2,1), (1,2)
             };
 
-            foreach (var cell in fillOrder)
+            foreach (var (row, col) in fillOrder)
             {
-                grid[cell.row, cell.col] = nextDigit;
+                grid[row, col] = nextDigit;
                 nextDigit = (nextDigit + 1) % 10;
             }
 
-            List<int> rowTotals = new();
+            var totals = new List<int>();
 
             for (int row = 0; row < 4; row++)
             {
@@ -142,13 +131,13 @@ namespace LuckyApp.Controllers
                 int b = grid[row, 1];
                 int c = grid[row, 2];
 
-                int firstPair = (a * 10) + b;
-                int secondPair = (b * 10) + c;
+                int firstPair = a * 10 + b;
+                int secondPair = b * 10 + c;
 
-                rowTotals.Add(firstPair + secondPair);
+                totals.Add(firstPair + secondPair);
             }
 
-            return (grid, rowTotals);
+            return (grid, totals);
         }
     }
 }

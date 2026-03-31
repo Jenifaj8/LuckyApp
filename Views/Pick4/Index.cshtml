@@ -13,74 +13,42 @@
                     <div class="card-body p-5">
                         <h1 class="mb-3">Pick 4</h1>
                         <p class="text-muted mb-0">
-                            View the latest draw, see the flip grid based on that draw, and generate numbers for the next draw.
+                            View the latest draw, generate numbers for the next draw, and explore the flip grid.
                         </p>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-body p-4">
-                        <h3 class="mb-4">Latest Draw</h3>
+                        <h3 class="mb-3">Latest Draw</h3>
 
-                        <div class="row g-4">
-                            <div class="col-lg-5">
-                                <div class="border rounded-4 p-4 h-100 bg-white">
-                                    <div class="mb-3">
-                                        <div class="text-muted small">Draw Date</div>
-                                        <div class="fw-semibold">@Model.LatestDrawDate</div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <div class="text-muted small">Draw Type</div>
-                                        <div class="fw-semibold fs-5">@Model.LatestDrawType</div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <div class="text-muted small">Winning Number</div>
-                                        <div class="d-flex gap-2 mt-2">
-                                            @foreach (var digit in (Model.LatestDrawNumber ?? "").ToCharArray())
-                                            {
-                                                <div class="rounded-circle bg-light border d-flex justify-content-center align-items-center fw-bold"
-                                                     style="width: 62px; height: 62px; font-size: 1.25rem;">
-                                                    @digit
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="text-muted small">Next Draw</div>
-                                        <div class="fw-semibold fs-5 text-success">@Model.NextDrawType</div>
-                                    </div>
-                                </div>
+                        <div class="d-flex flex-wrap align-items-center gap-4">
+                            <div>
+                                <div class="text-muted small">Draw Date</div>
+                                <div class="fw-semibold">@Model.LatestDrawDate</div>
                             </div>
 
-                            <div class="col-lg-7">
-                                <div class="border rounded-4 p-4 h-100 bg-white">
-                                    <h4 class="mb-3">Flip Technique Grid</h4>
-                                    <p class="text-muted small mb-4">
-                                        This grid is built from the latest draw result.
-                                    </p>
+                            <div>
+                                <div class="text-muted small">Draw Type</div>
+                                <div class="fw-semibold fs-5">@Model.LatestDrawType</div>
+                            </div>
 
-                                    @for (int row = 0; row < 4; row++)
+                            <div>
+                                <div class="text-muted small">Winning Number</div>
+                                <div class="d-flex gap-2 mt-2">
+                                    @foreach (var digit in (Model.LatestDrawNumber ?? "").ToCharArray())
                                     {
-                                        <div class="d-flex align-items-center gap-3 mb-3">
-                                            <div class="fw-bold text-success fs-5" style="width: 70px;">
-                                                @Model.RowTotals[row]
-                                            </div>
-
-                                            <div class="d-flex gap-2">
-                                                @for (int col = 0; col < 4; col++)
-                                                {
-                                                    <div class="border rounded-3 d-flex justify-content-center align-items-center fw-bold bg-light"
-                                                         style="width: 58px; height: 58px; font-size: 1.15rem;">
-                                                        @Model.FlipGrid[row, col]
-                                                    </div>
-                                                }
-                                            </div>
+                                        <div class="rounded-circle bg-light border d-flex justify-content-center align-items-center fw-bold"
+                                             style="width: 62px; height: 62px; font-size: 1.25rem;">
+                                            @digit
                                         </div>
                                     }
                                 </div>
+                            </div>
+
+                            <div>
+                                <div class="text-muted small">Next Draw</div>
+                                <div class="fw-semibold fs-5 text-success">@Model.NextDrawType</div>
                             </div>
                         </div>
                     </div>
@@ -90,7 +58,7 @@
                     <div class="card-body p-4">
                         <h3 class="mb-3">Generate for Next Draw</h3>
                         <p class="text-muted">
-                            The latest draw is prefilled below, but you can change it before generating the next draw number.
+                            The input stays separate from the flip grid. The latest draw is prefilled below.
                         </p>
 
                         <form method="post" class="mb-4">
@@ -116,23 +84,65 @@
                             </div>
                         }
 
-                        @if (!string.IsNullOrWhiteSpace(Model.GeneratedNumber))
-                        {
-                            <div class="border rounded-4 p-4 bg-white">
-                                <h4 class="mb-3">Generated Result</h4>
-                                <div class="text-muted small mb-2">Generated for @Model.NextDrawType</div>
+                        <div class="row g-4">
+                            <div class="col-lg-4">
+                                <div class="border rounded-4 p-4 h-100 bg-white">
+                                    <h4 class="mb-3">Generated Result</h4>
+                                    <div class="text-muted small mb-2">Generated for @Model.NextDrawType</div>
 
-                                <div class="d-flex gap-2 flex-wrap">
-                                    @foreach (var digit in Model.GeneratedNumber.ToCharArray())
+                                    @if (!string.IsNullOrWhiteSpace(Model.GeneratedNumber))
                                     {
-                                        <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center fw-bold shadow-sm"
-                                             style="width: 62px; height: 62px; font-size: 1.25rem;">
-                                            @digit
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            @foreach (var digit in Model.GeneratedNumber.ToCharArray())
+                                            {
+                                                <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center fw-bold shadow-sm"
+                                                     style="width: 62px; height: 62px; font-size: 1.25rem;">
+                                                    @digit
+                                                </div>
+                                            }
                                         </div>
                                     }
                                 </div>
                             </div>
-                        }
+
+                            <div class="col-lg-8 d-flex align-items-center">
+                                <div class="border rounded-4 p-4 h-100 bg-white">
+                                    <h4 class="mb-3">Flip Technique Grid</h4>
+                                    <p class="text-muted small mb-4">
+                                        Row totals are shown on the left.
+                                    </p>
+
+                                    @if (Model.RowTotals != null && Model.RowTotals.Count == 4)
+                                    {
+                                        @for (int row = 0; row < 4; row++)
+                                        {
+                                            <div class="d-flex align-items-center gap-4 mb-3">
+                                                <div class="fw-bold text-success fs-4 text-end" style="width: 80px;">
+                                                    @Model.RowTotals[row]
+                                                </div>
+
+                                                <div class="d-flex gap-2">
+                                                    @for (int col = 0; col < 4; col++)
+                                                    {
+                                                        <div class="border rounded-3 d-flex justify-content-center align-items-center fw-bold bg-light"
+                                                             style="width: 58px; height: 58px; font-size: 1.15rem;">
+                                                            @Model.FlipGrid[row, col]
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted">
+                                            Flip grid not ready yet.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
