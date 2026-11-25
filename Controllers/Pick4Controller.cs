@@ -7,132 +7,167 @@ namespace LuckyApp.Controllers
     public class Pick4Controller : Controller
     {
         private readonly OlgPick4Service _olgPick4Service;
+        private readonly Pick4CalculationService _pick4CalculationService;
 
-        public Pick4Controller(OlgPick4Service olgPick4Service)
+        public Pick4Controller(
+            OlgPick4Service olgPick4Service,
+            Pick4CalculationService pick4CalculationService)
         {
             _olgPick4Service = olgPick4Service;
+            _pick4CalculationService = pick4CalculationService;
         }
 
+        // Load the Pick 4 page.
         [HttpGet]
         public async Task<IActionResult> Index()
         {
             var model = await BuildInitialModelAsync();
+
             return View(model);
         }
 
+        // Process the number entered by the user.
         [HttpPost]
-        public async Task<IActionResult> Index(string inputNumber)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Index(string? inputNumber)
         {
             var model = await BuildInitialModelAsync();
 
-            if (string.IsNullOrWhiteSpace(inputNumber))
-            {
-                model.ErrorMessage = "Please enter a 4-digit number.";
-                return View(model);
-            }
-
-            inputNumber = inputNumber.Trim();
-
-            if (inputNumber.Length != 4 || !inputNumber.All(char.IsDigit))
-            {
-                model.ErrorMessage = "Pick 4 requires exactly 4 digits.";
-                return View(model);
-            }
+            inputNumber = inputNumber?.Trim();
 
             model.InputNumber = inputNumber;
-            model.GeneratedNumber = GenerateNextNumber(inputNumber);
 
-            var (grid, totals) = BuildFlipGrid(inputNumber);
-            model.FlipGrid = grid;
-            model.RowTotals = totals;
+            // Validate the entered number.
+            if (!IsValidNumber(inputNumber))
+            {
+                model.ErrorMessage =
+                    "Please enter exactly 4 digits.";
+
+                model.RowTotals.Clear();
+                model.ArithmeticResults.Clear();
+
+                return View(model);
+            }
+
+            // Generate the flip grid and arithmetic calculations.
+            ApplyCalculations(model, inputNumber!);
 
             return View(model);
         }
 
+        // Retrieve the latest OLG result.
         private async Task<Pick4ViewModel> BuildInitialModelAsync()
         {
-            var latest = await _olgPick4Service.GetLatestPick4ResultAsync();
+            var latest = await _olgPick4Service
+                .GetLatestPick4ResultAsync();
 
-            string latestDrawType = latest?.DrawType ?? "Midday";
-            string latestDrawNumber = latest?.Number ?? "4566";
-            string latestDrawDate = latest?.DrawDate ?? "Latest draw unavailable";
-
-            string nextDrawType = latestDrawType.Equals("Midday", StringComparison.OrdinalIgnoreCase)
-                ? "Evening"
-                : "Midday";
-
-            var (grid, totals) = BuildFlipGrid(latestDrawNumber);
-
-            return new Pick4ViewModel
+            var model = new Pick4ViewModel
             {
-                LatestDrawDate = latestDrawDate,
-                LatestDrawType = latestDrawType,
-                LatestDrawNumber = latestDrawNumber,
-                NextDrawType = nextDrawType,
-                InputNumber = latestDrawNumber,
-                GeneratedNumber = GenerateNextNumber(latestDrawNumber),
-                FlipGrid = grid,
-                RowTotals = totals
+                LatestDrawDate = latest?.DrawDate,
+
+                LatestDrawType = latest?.DrawType,
+
+                LatestDrawNumber = latest?.Number,
+
+                NextDrawType = latest == null
+                    ? "Unavailable"
+                    : string.Equals(
+                        latest.DrawType,
+                        "Midday",
+                        StringComparison.OrdinalIgnoreCase)
+                        ? "Night"
+                        : "Midday"
             };
-        }
 
-        private string GenerateNextNumber(string inputNumber)
-        {
-            var digits = inputNumber.Select(c => int.Parse(c.ToString())).ToList();
-            List<int> generatedDigits = new();
-
-            for (int i = 0; i < digits.Count; i++)
+            // Automatically calculate if a valid result exists.
+            if (IsValidNumber(latest?.Number))
             {
-                int newDigit = (i % 2 == 0) ? digits[i] + 1 : digits[i] - 1;
+                model.InputNumber = latest!.Number;
 
-                if (newDigit < 0) newDigit = 0;
-                if (newDigit > 9) newDigit = 9;
-
-                generatedDigits.Add(newDigit);
+                ApplyCalculations(model, latest.Number);
             }
 
-            return string.Join("", generatedDigits);
+            return model;
         }
 
-        private (int[,] grid, List<int> totals) BuildFlipGrid(string inputNumber)
+        // Apply the flip grid and arithmetic calculations.
+        private void ApplyCalculations(
+            Pick4ViewModel model,
+            string inputNumber)
+        {
+            var (grid, totals) = BuildFlipGrid(inputNumber);
+
+            model.FlipGrid = grid;
+
+            model.RowTotals = totals;
+
+            model.ArithmeticResults =
+                _pick4CalculationService.CalculateArithmetic(totals);
+        }
+
+        // Validate that the input contains exactly four digits.
+        private bool IsValidNumber(string? number)
+        {
+            return number != null
+                   && number.Length == 4
+                   && number.All(c => c >= '0' && c <= '9');
+        }
+
+        // Build the handwritten flip technique grid.
+        private (int[,] grid, List<int> totals)
+            BuildFlipGrid(string inputNumber)
         {
             int[,] grid = new int[4, 4];
 
-            // put input digits on diagonal
+            // Place the winning number on the diagonal.
             for (int i = 0; i < 4; i++)
             {
-                grid[i, i] = int.Parse(inputNumber[i].ToString());
+                grid[i, i] = inputNumber[i] - '0';
             }
 
-            int lastDigit = int.Parse(inputNumber[3].ToString());
+            // Start counting from the last digit.
+            int lastDigit = inputNumber[3] - '0';
+
             int nextDigit = (lastDigit + 1) % 10;
 
-            // fill remaining cells in a fixed order
+            // Fill the remaining cells in the correct sequence.
             var fillOrder = new List<(int row, int col)>
             {
-                (2,3), (1,3), (0,3),
-                (0,2), (0,1),
-                (1,0), (2,0), (3,0),
-                (3,1), (3,2),
-                (2,1), (1,2)
+                (3, 2),
+                (3, 1),
+                (3, 0),
+
+                (2, 0),
+                (1, 0),
+
+                (0, 1),
+                (0, 2),
+                (0, 3),
+
+                (1, 3),
+                (2, 3),
+
+                (2, 1),
+                (1, 2)
             };
 
             foreach (var (row, col) in fillOrder)
             {
                 grid[row, col] = nextDigit;
+
                 nextDigit = (nextDigit + 1) % 10;
             }
 
+            // Calculate the total for each row.
             var totals = new List<int>();
 
             for (int row = 0; row < 4; row++)
             {
-                int a = grid[row, 0];
-                int b = grid[row, 1];
-                int c = grid[row, 2];
+                int firstPair =
+                    grid[row, 0] * 10 + grid[row, 1];
 
-                int firstPair = a * 10 + b;
-                int secondPair = b * 10 + c;
+                int secondPair =
+                    grid[row, 2] * 10 + grid[row, 3];
 
                 totals.Add(firstPair + secondPair);
             }

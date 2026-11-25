@@ -12,5 +12,11 @@
 
         public int[,] FlipGrid { get; set; } = new int[4, 4];
         public List<int> RowTotals { get; set; } = new List<int>();
+        
+        public List<Pick4ArithmeticResult> ArithmeticResults
+        {
+            get;
+            set;
+        } = new();
     }
 }

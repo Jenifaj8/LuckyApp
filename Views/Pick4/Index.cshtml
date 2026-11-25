@@ -2,151 +2,842 @@
 
 @{
     ViewData["Title"] = "Pick 4";
+
+    bool isMidday = string.Equals(
+        Model.LatestDrawType,
+        "Midday",
+        StringComparison.OrdinalIgnoreCase);
+
+    bool hasResult =
+        !string.IsNullOrWhiteSpace(Model.LatestDrawNumber);
 }
 
-<div class="py-5" style="background-color: #fff1f6; min-height: 100vh;">
+<style>
+
+    .pick4-page {
+        background: #f5f0fc;
+        min-height: 100vh;
+        padding: 35px 15px;
+        border-radius: 18px;
+    }
+
+    .pick4-header {
+        background: #e5d9f7;
+        color: #593b80;
+        border-radius: 16px;
+        padding: 30px;
+    }
+
+    .pick4-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+        height: 100%;
+    }
+
+    .midday-card {
+        background: #e1edfc;
+        color: #315880;
+    }
+
+    .night-card {
+        background: #e9dff8;
+        color: #593b80;
+    }
+
+    .number-ball {
+        width: 48px;
+        height: 48px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.4rem;
+        font-weight: bold;
+    }
+
+    .pick4-navigation {
+        background: white;
+        padding: 15px;
+        border-radius: 14px;
+    }
+
+    .pick4-tab {
+        background: #eee6f9;
+        color: #593b80;
+        border: none;
+        border-radius: 9px;
+        padding: 12px 18px;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .pick4-tab:hover {
+        background: #d9c8f2;
+        color: #593b80;
+    }
+
+    .pick4-tab:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .calculate-button {
+        background: #9bbce8;
+        color: #243f65;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 25px;
+        font-weight: 600;
+    }
+
+    .calculate-button:hover {
+        background: #82a9de;
+    }
+
+    .flip-table {
+        border-collapse: separate;
+        border-spacing: 8px;
+    }
+
+    .flip-cell {
+        width: 55px;
+        height: 55px;
+        background: #f4f0fa;
+        border: 1px solid #ded5ed;
+        border-radius: 9px;
+        text-align: center;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .diagonal-cell {
+        background: #cdb9ed;
+        color: #4e3175;
+        border: 1px solid #b69bdc;
+    }
+
+    .row-calculation {
+        color: #593b80;
+        font-size: 1.1rem;
+        white-space: nowrap;
+        padding-left: 12px;
+    }
+
+    .pick4-heading {
+        color: #593b80;
+    }
+
+    .arithmetic-table {
+        border-color: #ded5ed;
+    }
+
+    .arithmetic-table thead th {
+        background: #e5d9f7;
+        color: #593b80;
+        padding: 14px;
+    }
+
+    .arithmetic-table tbody td {
+        padding: 12px;
+    }
+
+    .arithmetic-table tbody tr:nth-child(even) td {
+        background: #f8f5fc;
+    }
+
+    .arithmetic-table tbody tr:hover td {
+        background: #eaf1fc;
+    }
+
+    .arithmetic-value {
+        color: #593b80 !important;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .unavailable-value {
+        color: #adb5bd !important;
+        text-align: center;
+    }
+
+    .calculation-toggle {
+        background: #e5d9f7;
+        color: #593b80;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-block;
+        list-style: none;
+    }
+
+    .calculation-toggle:hover {
+        background: #d5c3f1;
+    }
+
+    .calculation-toggle::-webkit-details-marker {
+        display: none;
+    }
+
+    .hide-calculation-text {
+        display: none;
+    }
+
+    details[open] .show-calculation-text {
+        display: none;
+    }
+
+    details[open] .hide-calculation-text {
+        display: inline;
+    }
+
+    .analysis-item {
+        background: #f8f5fc;
+        border: 1px solid #e5d9f7;
+        border-radius: 10px;
+        padding: 15px;
+        height: 100%;
+    }
+
+    .analysis-item h6 {
+        color: #593b80;
+        font-weight: 600;
+    }
+
+    .analysis-status {
+        background: #e1edfc;
+        color: #315880;
+        border-radius: 8px;
+        padding: 12px 15px;
+    }
+
+</style>
+
+<div class="pick4-page">
+
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
 
-                <div class="card shadow-sm border-0 rounded-4 mb-4">
-                    <div class="card-body p-5">
-                        <h1 class="mb-3">Pick 4</h1>
-                        <p class="text-muted mb-0">
-                            View the latest draw, generate numbers for the next draw, and explore the flip grid.
-                        </p>
-                    </div>
-                </div>
+        <!-- Page Header -->
 
-                <div class="card shadow-sm border-0 rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h3 class="mb-3">Latest Draw</h3>
+        <div class="pick4-header mb-4" id="dashboard">
 
-                        <div class="d-flex flex-wrap align-items-center gap-4">
-                            <div>
-                                <div class="text-muted small">Draw Date</div>
-                                <div class="fw-semibold">@Model.LatestDrawDate</div>
-                            </div>
+            <h1 class="fw-bold">
+                LuckyApp — Pick 4
+            </h1>
 
-                            <div>
-                                <div class="text-muted small">Draw Type</div>
-                                <div class="fw-semibold fs-5">@Model.LatestDrawType</div>
-                            </div>
+            <p class="mb-0">
+                Calculation and historical pattern analysis
+            </p>
 
-                            <div>
-                                <div class="text-muted small">Winning Number</div>
-                                <div class="d-flex gap-2 mt-2">
-                                    @foreach (var digit in (Model.LatestDrawNumber ?? "").ToCharArray())
-                                    {
-                                        <div class="rounded-circle bg-light border d-flex justify-content-center align-items-center fw-bold"
-                                             style="width: 62px; height: 62px; font-size: 1.25rem;">
-                                            @digit
-                                        </div>
-                                    }
+        </div>
+
+
+        <!-- Latest Draw Results -->
+
+        <div class="row g-4 mb-4">
+
+            <!-- Midday Result -->
+
+            <div class="col-md-6">
+
+                <div class="pick4-card midday-card">
+
+                    <h4>Midday Result</h4>
+
+                    @if (hasResult && isMidday)
+                    {
+                        <p>@Model.LatestDrawDate</p>
+
+                        <div class="d-flex gap-2 flex-wrap">
+
+                            @foreach (var digit in Model.LatestDrawNumber!)
+                            {
+                                <div class="number-ball">
+                                    @digit
                                 </div>
-                            </div>
+                            }
 
-                            <div>
-                                <div class="text-muted small">Next Draw</div>
-                                <div class="fw-semibold fs-5 text-success">@Model.NextDrawType</div>
-                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm border-0 rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h3 class="mb-3">Generate for Next Draw</h3>
-                        <p class="text-muted">
-                            The input stays separate from the flip grid. The latest draw is prefilled below.
+                    }
+                    else
+                    {
+                        <p class="mb-0">
+                            Result unavailable
                         </p>
+                    }
 
-                        <form method="post" class="mb-4">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">4-Digit Number</label>
-                                <input type="text"
-                                       name="inputNumber"
-                                       value="@Model.InputNumber"
-                                       class="form-control form-control-lg rounded-3"
-                                       maxlength="4"
-                                       placeholder="e.g. 4566" />
-                            </div>
-
-                            <button type="submit" class="btn btn-success btn-sm rounded-3 px-4">
-                                Generate Next Draw Number
-                            </button>
-                        </form>
-
-                        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-                        {
-                            <div class="alert alert-danger rounded-3">
-                                @Model.ErrorMessage
-                            </div>
-                        }
-
-                        <div class="row g-4">
-                            <div class="col-lg-4">
-                                <div class="border rounded-4 p-4 h-100 bg-white">
-                                    <h4 class="mb-3">Generated Result</h4>
-                                    <div class="text-muted small mb-2">Generated for @Model.NextDrawType</div>
-
-                                    @if (!string.IsNullOrWhiteSpace(Model.GeneratedNumber))
-                                    {
-                                        <div class="d-flex gap-2 flex-wrap">
-                                            @foreach (var digit in Model.GeneratedNumber.ToCharArray())
-                                            {
-                                                <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center fw-bold shadow-sm"
-                                                     style="width: 62px; height: 62px; font-size: 1.25rem;">
-                                                    @digit
-                                                </div>
-                                            }
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-
-                            <div class="col-lg-8 d-flex align-items-center">
-                                <div class="border rounded-4 p-4 h-100 bg-white">
-                                    <h4 class="mb-3">Flip Technique Grid</h4>
-                                    <p class="text-muted small mb-4">
-                                        Row totals are shown on the left.
-                                    </p>
-
-                                    @if (Model.RowTotals != null && Model.RowTotals.Count == 4)
-                                    {
-                                        @for (int row = 0; row < 4; row++)
-                                        {
-                                            <div class="d-flex align-items-center gap-4 mb-3">
-                                                <div class="fw-bold text-success fs-4 text-end" style="width: 80px;">
-                                                    @Model.RowTotals[row]
-                                                </div>
-
-                                                <div class="d-flex gap-2">
-                                                    @for (int col = 0; col < 4; col++)
-                                                    {
-                                                        <div class="border rounded-3 d-flex justify-content-center align-items-center fw-bold bg-light"
-                                                             style="width: 58px; height: 58px; font-size: 1.15rem;">
-                                                            @Model.FlipGrid[row, col]
-                                                        </div>
-                                                    }
-                                                </div>
-                                            </div>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <div class="text-muted">
-                                            Flip grid not ready yet.
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
                 </div>
 
             </div>
+
+
+            <!-- Night Result -->
+
+            <div class="col-md-6">
+
+                <div class="pick4-card night-card">
+
+                    <h4>Night Result</h4>
+
+                    @if (hasResult && !isMidday)
+                    {
+                        <p>@Model.LatestDrawDate</p>
+
+                        <div class="d-flex gap-2 flex-wrap">
+
+                            @foreach (var digit in Model.LatestDrawNumber!)
+                            {
+                                <div class="number-ball">
+                                    @digit
+                                </div>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="mb-0">
+                            Result unavailable
+                        </p>
+                    }
+
+                </div>
+
+            </div>
+
         </div>
+
+
+        <!-- Navigation -->
+
+        <div class="pick4-navigation mb-4">
+
+            <div class="d-flex flex-wrap gap-2">
+
+                <a href="#dashboard"
+                   class="pick4-tab">
+                    Dashboard
+                </a>
+
+                <a href="#flip-grid"
+                   class="pick4-tab">
+                    Flip Grid
+                </a>
+
+                <a href="#calculation-results"
+                   class="pick4-tab">
+                    Calculation Results
+                </a>
+
+                <a href="#pattern-analysis"
+                   class="pick4-tab">
+                    Pattern Analysis
+                </a>
+
+                <button class="pick4-tab" disabled>
+                    Historical Results
+                </button>
+
+                <button class="pick4-tab" disabled>
+                    Backtesting
+                </button>
+
+                <button class="pick4-tab" disabled>
+                    Calculation History
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Flip Grid Calculation -->
+
+        <div class="pick4-card mb-4" id="flip-grid">
+
+            <h3 class="pick4-heading mb-3">
+                Flip Grid Calculation
+            </h3>
+
+            <p class="text-muted">
+                Enter a previous winning number to generate
+                the calculation grid.
+            </p>
+
+            <form asp-controller="Pick4"
+                  asp-action="Index"
+                  method="post">
+
+                <div class="mb-3">
+
+                    <label for="inputNumber"
+                           class="form-label fw-semibold">
+
+                        Previous Winning Number
+
+                    </label>
+
+                    <input type="text"
+                           id="inputNumber"
+                           name="inputNumber"
+                           value="@Model.InputNumber"
+                           class="form-control form-control-lg"
+                           maxlength="4"
+                           minlength="4"
+                           inputmode="numeric"
+                           pattern="[0-9]{4}"
+                           placeholder="Enter 4 digits"
+                           required />
+
+                </div>
+
+                <button type="submit"
+                        class="calculate-button">
+
+                    Calculate
+
+                </button>
+
+            </form>
+
+
+            <!-- Validation Error -->
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger mt-3">
+
+                    @Model.ErrorMessage
+
+                </div>
+            }
+
+
+            <!-- Display the Flip Grid -->
+
+            @if (Model.RowTotals.Count == 4)
+            {
+                <hr class="my-4" />
+
+                <h4 class="pick4-heading">
+                    Calculation Grid
+                </h4>
+
+                <p class="text-muted">
+                    Highlighted cells represent the
+                    previous winning number.
+                </p>
+
+                <div class="table-responsive">
+
+                    <table class="flip-table">
+
+                        <tbody>
+
+                        @for (int row = 0; row < 4; row++)
+                        {
+                            <tr>
+
+                                @for (int col = 0; col < 4; col++)
+                                {
+                                    <td class="flip-cell
+                                        @(row == col ? "diagonal-cell" : "")">
+
+                                        @Model.FlipGrid[row, col]
+
+                                    </td>
+                                }
+
+                                <td class="row-calculation">
+
+                                    @($"{Model.FlipGrid[row, 0]}{Model.FlipGrid[row, 1]}")
+
+                                    +
+
+                                    @($"{Model.FlipGrid[row, 2]}{Model.FlipGrid[row, 3]}")
+
+                                    =
+
+                                    <strong>
+                                        @Model.RowTotals[row]
+                                    </strong>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+
+            <!-- Expandable Arithmetic Calculations -->
+
+            @if (Model.ArithmeticResults.Count > 0)
+            {
+                <div class="mt-4"
+                     id="arithmetic-analysis">
+
+                    <details>
+
+                        <summary class="calculation-toggle">
+
+                            <span class="show-calculation-text">
+                                View Arithmetic Calculations +
+                            </span>
+
+                            <span class="hide-calculation-text">
+                                Hide Arithmetic Calculations −
+                            </span>
+
+                        </summary>
+
+
+                        <div class="mt-4">
+
+                            <h4 class="pick4-heading mb-3">
+
+                                Arithmetic Calculation Analysis
+
+                            </h4>
+
+                            <p class="text-muted">
+
+                                Compare the calculation techniques
+                                for each of the four row totals.
+
+                            </p>
+
+                            <div class="table-responsive">
+
+                                <table class="table table-bordered
+                                              align-middle arithmetic-table">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>Technique</th>
+
+                                            @foreach (var total in Model.RowTotals)
+                                            {
+                                                <th class="text-center">
+
+                                                    @total
+
+                                                </th>
+                                            }
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        @foreach (var result in Model.ArithmeticResults)
+                                        {
+                                            <tr>
+
+                                                <td>
+
+                                                    @result.Technique
+
+                                                </td>
+
+                                                @foreach (var value in result.Values)
+                                                {
+                                                    <td class="@(value.HasValue
+                                                        ? "arithmetic-value"
+                                                        : "unavailable-value")">
+
+                                                        @(value.HasValue
+                                                            ? value.Value.ToString()
+                                                            : "—")
+
+                                                    </td>
+                                                }
+
+                                            </tr>
+                                        }
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <p class="text-muted small mb-0">
+
+                                A dash indicates that the calculation
+                                does not produce a valid single digit.
+
+                            </p>
+
+                        </div>
+
+                    </details>
+
+                </div>
+            }
+
+        </div>
+
+
+        <!-- Calculation Results -->
+
+        <div class="pick4-card mb-4"
+             id="calculation-results">
+
+            <h3 class="pick4-heading mb-3">
+
+                Calculation Results
+
+            </h3>
+
+            <p class="text-muted">
+
+                Calculated numbers based on arithmetic techniques,
+                digit arrangements and historical draw patterns.
+
+            </p>
+
+            <div class="analysis-status">
+
+                Automatic calculation engine not yet configured.
+
+            </div>
+
+        </div>
+
+
+        <!-- Historical Pattern Analysis -->
+
+        <div class="pick4-card mb-4"
+             id="pattern-analysis">
+
+            <h3 class="pick4-heading mb-3">
+
+                Historical Pattern Analysis
+
+            </h3>
+
+            <p class="text-muted">
+
+                Planned analysis of previous OLG results
+                to investigate recurring calculation techniques
+                and digit-position arrangements.
+
+            </p>
+
+            <div class="row g-3">
+
+                <!-- Day of the Week -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Day of the Week</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Compare previous draws from
+                            the same weekday.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Date of the Month -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Date of the Month</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Compare draws occurring on
+                            the same calendar date number.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Draw Type -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Draw Type</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Analyse Midday and Night
+                            draw results separately.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Previous Years -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Previous Years</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Compare corresponding dates
+                            from previous years.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Arithmetic Techniques -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Arithmetic Techniques</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Analyse recurring arithmetic
+                            operations for each grid total.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Digit Positions -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Digit Positions</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Analyse all 24 possible
+                            digit-position arrangements.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Recurring Cycles -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Recurring Cycles</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Investigate recurring patterns
+                            across 7, 14 and 30 days.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Mirror Numbers -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Mirror Numbers</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Analyse relationships between
+                            opposite digits.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Previous Draws -->
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="analysis-item">
+
+                        <h6>Previous Draws</h6>
+
+                        <p class="text-muted small mb-0">
+
+                            Compare consecutive draws and
+                            previous draws of the same type.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="analysis-status mt-4">
+
+                Historical database and pattern analysis
+                are pending implementation.
+
+            </div>
+
+        </div>
+
+
+        <!-- Disclaimer -->
+
+        <p class="text-muted small text-center mt-4">
+
+            Calculations are experimental and do not guarantee
+            future lottery results.
+
+        </p>
+
     </div>
+
 </div>

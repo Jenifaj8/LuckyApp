@@ -1,0 +1,338 @@
+﻿@model List<LuckyApp.Models.Pick4Draw>
+
+@{
+    ViewData["Title"] = "Pick 4 Historical Results";
+
+    var groupedDraws = Model
+        .GroupBy(d => d.DrawDate)
+        .OrderByDescending(g => g.Key)
+        .ToList();
+}
+
+<style>
+
+    .history-page {
+        background: #f5f0fc;
+        min-height: 100vh;
+        padding: 30px;
+        border-radius: 18px;
+    }
+
+    .history-header {
+        background: #e5d9f7;
+        color: #593b80;
+        padding: 25px;
+        border-radius: 15px;
+    }
+
+    .history-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+        height: 100%;
+    }
+
+    .history-heading {
+        color: #593b80;
+    }
+
+    .history-stat {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #593b80;
+    }
+
+    .history-button {
+        background: #9bbce8;
+        color: #243f65;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .history-button:hover {
+        background: #82a9de;
+        color: #243f65;
+    }
+
+    .history-table thead th {
+        background: #e5d9f7;
+        color: #593b80;
+        padding: 14px;
+    }
+
+    .history-table tbody td {
+        padding: 12px;
+    }
+
+    .history-table tbody tr:nth-child(even) td {
+        background: #f8f5fc;
+    }
+
+    .midday-number {
+        color: #315880 !important;
+        font-weight: bold;
+        letter-spacing: 3px;
+    }
+
+    .night-number {
+        color: #593b80 !important;
+        font-weight: bold;
+        letter-spacing: 3px;
+    }
+
+</style>
+
+<div class="history-page">
+
+    <div class="history-header mb-4">
+
+        <h1 class="fw-bold">
+            Pick 4 Historical Results
+        </h1>
+
+        <p class="mb-3">
+            View and import historical OLG draw results.
+        </p>
+
+        <a asp-controller="Pick4"
+           asp-action="Index"
+           class="btn btn-light">
+
+            Back to Pick 4
+
+        </a>
+
+    </div>
+
+    <!-- Statistics -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+
+            <div class="history-card">
+
+                <div>Total Draws</div>
+
+                <div class="history-stat">
+                    @Model.Count
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="history-card">
+
+                <div>Dates Stored</div>
+
+                <div class="history-stat">
+                    @groupedDraws.Count
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="history-card">
+
+                <div>Midday Draws</div>
+
+                <div class="history-stat">
+
+                    @Model.Count(d => d.DrawType == "Midday")
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="history-card">
+
+                <div>Night Draws</div>
+
+                <div class="history-stat">
+
+                    @Model.Count(d => d.DrawType == "Night")
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Import CSV -->
+
+    <div class="history-card mb-4">
+
+        <h3 class="history-heading mb-3">
+
+            Import Historical Results
+
+        </h3>
+
+        <p class="text-muted">
+
+            Upload a CSV file containing historical
+            Pick 4 results.
+
+        </p>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-info">
+
+                @TempData["Success"]
+
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+
+                @TempData["Error"]
+
+            </div>
+        }
+
+        <form asp-controller="Pick4History"
+              asp-action="Import"
+              method="post"
+              enctype="multipart/form-data">
+
+            <div class="mb-3">
+
+                <label class="form-label fw-semibold">
+
+                    Select CSV File
+
+                </label>
+
+                <input type="file"
+                       name="file"
+                       class="form-control"
+                       accept=".csv"
+                       required />
+
+            </div>
+
+            <button type="submit"
+                    class="history-button">
+
+                Import Results
+
+            </button>
+
+        </form>
+
+        <details class="mt-3">
+
+            <summary class="history-heading fw-semibold"
+                     style="cursor:pointer;">
+
+                View Required CSV Format
+
+            </summary>
+
+            <pre class="bg-light p-3 mt-3 rounded">DrawDate,DrawType,WinningNumber,Source
+2026-11-02,Midday,9726,Notebook
+2026-11-02,Night,6150,Notebook</pre>
+
+        </details>
+
+    </div>
+
+    <!-- Historical Results Table -->
+
+    <div class="history-card">
+
+        <h3 class="history-heading mb-3">
+
+            Historical Draw Results
+
+        </h3>
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered
+                          align-middle history-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>JSType.Date</th>
+                        <th>Day</th>
+                        <th class="text-center">Midday</th>
+                        <th class="text-center">Night</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var group in groupedDraws)
+                    {
+                        var midday = group.FirstOrDefault(
+                            d => d.DrawType == "Midday");
+
+                        var night = group.FirstOrDefault(
+                            d => d.DrawType == "Night");
+
+                        <tr>
+
+                            <td>
+                                @group.Key.ToString("MMM dd, yyyy")
+                            </td>
+
+                            <td>
+                                @group.Key.DayOfWeek
+                            </td>
+
+                            <td class="text-center midday-number">
+
+                                @(midday?.WinningNumber ?? "—")
+
+                            </td>
+
+                            <td class="text-center night-number">
+
+                                @(night?.WinningNumber ?? "—")
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <p class="text-muted">
+
+                No historical results have been imported.
+
+            </p>
+        }
+
+    </div>
+
+</div>
